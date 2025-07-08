@@ -1,6 +1,7 @@
 import os
 import subprocess
-import google.genai.types as types
+from google.genai import types
+
 
 def run_python_file(working_directory, file_path, args=None):
     abs_working_dir = os.path.abspath(working_directory)
@@ -12,7 +13,7 @@ def run_python_file(working_directory, file_path, args=None):
     if not file_path.endswith(".py"):
         return f'Error: "{file_path}" is not a Python file.'
     try:
-        commands = ["python3", abs_file_path]
+        commands = ["python", abs_file_path]
         if args:
             commands.extend(args)
         result = subprocess.run(
@@ -35,16 +36,26 @@ def run_python_file(working_directory, file_path, args=None):
     except Exception as e:
         return f"Error: executing Python file: {e}"
 
-schema_run_python = types.FunctionDeclaration(
-    name="run_python",
-    description="Executes a Python file in the specified working directory with optional arguments. The file must be a valid Python script.",
+
+schema_run_python_file = types.FunctionDeclaration(
+    name="run_python_file",
+    description="Executes a Python file within the working directory and returns the output from the interpreter.",
     parameters=types.Schema(
         type=types.Type.OBJECT,
         properties={
-            "directory": types.Schema(
+            "file_path": types.Schema(
                 type=types.Type.STRING,
-                description="The working directory where the Python file is located. If not provided, uses the current working directory.",
+                description="Path to the Python file to execute, relative to the working directory.",
+            ),
+            "args": types.Schema(
+                type=types.Type.ARRAY,
+                items=types.Schema(
+                    type=types.Type.STRING,
+                    description="Optional arguments to pass to the Python file.",
+                ),
+                description="Optional arguments to pass to the Python file.",
             ),
         },
+        required=["file_path"],
     ),
 )
